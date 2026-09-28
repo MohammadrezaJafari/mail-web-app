@@ -15,6 +15,7 @@
     "postinstall": "quasar prepare --silent"
   },
   "dependencies": {
+    "@fontsource/vazirmatn": "^5.3.0",
     "@quasar/extras": "^2.1.0",
     "axios": "^1.20.0",
     "dompurify": "^3.4.16",

@@ -1,8 +1,11 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1 text-weight-medium">{{ t('settings.signature') }}</div>
-      <div class="text-caption text-grey">{{ t('settings.signatureHint') }}</div>
+  <q-card flat class="settings-card">
+    <q-card-section class="card-head">
+      <div class="card-icon"><q-icon name="draw" size="20px" /></div>
+      <div class="col">
+        <div class="text-subtitle1 text-weight-semibold">{{ t('settings.signature') }}</div>
+        <div class="text-caption text-grey">{{ t('settings.signatureHint') }}</div>
+      </div>
     </q-card-section>
     <q-separator />
     <q-card-section>

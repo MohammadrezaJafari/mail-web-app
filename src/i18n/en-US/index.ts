@@ -10,6 +10,11 @@ export default {
     failed: 'Sign-in failed',
     sessionExpired: 'Your session expired. Please sign in again.',
   },
+  login: {
+    heroTitle: 'All your mail, one calm place.',
+    heroSubtitle:
+      'Read, write and organise your organisation e-mail with a fast, modern web client.',
+  },
   nav: { mail: 'Mail', settings: 'Settings', webmail: 'Open webmail (SOGo)', language: 'Language' },
   mail: {
     newMail: 'New mail',

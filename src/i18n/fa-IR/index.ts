@@ -12,6 +12,10 @@ const fa: typeof en = {
     failed: 'ورود ناموفق بود',
     sessionExpired: 'نشست شما منقضی شد. دوباره وارد شوید.',
   },
+  login: {
+    heroTitle: 'همه ایمیل‌هایت، در یک جای آرام.',
+    heroSubtitle: 'ایمیل سازمانی‌ات را با یک کلاینت وب سریع و مدرن بخوان، بنویس و مرتب کن.',
+  },
   nav: { mail: 'ایمیل', settings: 'تنظیمات', webmail: 'باز کردن وب‌میل (SOGo)', language: 'زبان' },
   mail: {
     newMail: 'ایمیل جدید',

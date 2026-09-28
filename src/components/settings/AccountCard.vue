@@ -1,7 +1,10 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1 text-weight-medium">{{ t('settings.account') }}</div>
+  <q-card flat class="settings-card">
+    <q-card-section class="card-head">
+      <div class="card-icon"><q-icon name="person" size="20px" /></div>
+      <div class="col">
+        <div class="text-subtitle1 text-weight-semibold">{{ t('settings.account') }}</div>
+      </div>
     </q-card-section>
     <q-separator />
     <q-card-section v-if="auth.mailbox" class="row items-center no-wrap">

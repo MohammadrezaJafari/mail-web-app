@@ -1,8 +1,9 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section class="row items-center no-wrap">
+  <q-card flat class="settings-card">
+    <q-card-section class="card-head row items-center no-wrap">
+      <div class="card-icon"><q-icon name="event_busy" size="20px" /></div>
       <div class="col">
-        <div class="text-subtitle1 text-weight-medium">{{ t('settings.autoReply') }}</div>
+        <div class="text-subtitle1 text-weight-semibold">{{ t('settings.autoReply') }}</div>
         <div class="text-caption text-grey">{{ t('settings.autoReplyHint') }}</div>
       </div>
       <q-toggle v-model="enabled" :label="t('settings.enabled')" />

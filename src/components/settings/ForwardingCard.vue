@@ -1,8 +1,11 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1 text-weight-medium">{{ t('settings.forwarding') }}</div>
-      <div class="text-caption text-grey">{{ t('settings.forwardingHint') }}</div>
+  <q-card flat class="settings-card">
+    <q-card-section class="card-head">
+      <div class="card-icon"><q-icon name="forward_to_inbox" size="20px" /></div>
+      <div class="col">
+        <div class="text-subtitle1 text-weight-semibold">{{ t('settings.forwarding') }}</div>
+        <div class="text-caption text-grey">{{ t('settings.forwardingHint') }}</div>
+      </div>
     </q-card-section>
     <q-separator />
     <q-card-section class="q-gutter-sm">

@@ -1,6 +1,6 @@
 <template>
   <q-card class="compose-window" :class="{ 'is-minimized': compose.minimized }" flat>
-    <q-bar class="bg-primary text-white">
+    <q-bar class="compose-bar text-white">
       <span class="ellipsis">{{ subject || t('compose.title') }}</span>
       <q-space />
       <q-btn
@@ -53,7 +53,7 @@
           dense
           borderless
           :placeholder="t('mail.subject')"
-          class="q-mt-xs subject-input"
+          class="q-mt-xs subject-input bidi-auto"
         />
       </q-card-section>
       <q-separator />
@@ -264,6 +264,11 @@ function discard() {
 </script>
 
 <style scoped>
+.compose-bar {
+  background: linear-gradient(90deg, #0f6cbd, #2b88d8);
+  height: 40px;
+  font-weight: 600;
+}
 .compose-body {
   flex: 1 1 auto;
   min-height: 0;

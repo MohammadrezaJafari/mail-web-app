@@ -1,24 +1,31 @@
 <template>
   <div class="mail-pane">
-    <div class="q-px-sm q-pt-sm">
+    <div class="q-px-md q-pt-md">
       <q-input
         v-model="search"
         dense
         outlined
+        rounded
+        bg-color="grey-1"
         :placeholder="t('mail.search')"
         debounce="400"
         clearable
+        class="search-input"
         @update:model-value="onSearch"
       >
         <template #prepend><q-icon name="search" /></template>
       </q-input>
-      <div class="row items-center q-py-xs no-wrap">
+      <div class="row items-center q-py-sm no-wrap">
         <q-btn-toggle
           v-model="filter"
           dense
-          flat
+          unelevated
           no-caps
+          rounded
           toggle-color="primary"
+          color="grey-2"
+          text-color="grey-8"
+          class="filter-toggle"
           :options="[
             { label: t('mail.all'), value: null },
             { label: t('mail.unread'), value: 'unread' },
@@ -51,7 +58,7 @@
     </div>
     <q-separator />
 
-    <div class="mail-scroll" @scroll.passive="onScroll" ref="scroller">
+    <div class="mail-scroll q-py-xs" @scroll.passive="onScroll" ref="scroller">
       <q-linear-progress
         v-if="mail.listLoading && !mail.messages.length"
         indeterminate
@@ -60,17 +67,17 @@
 
       <div
         v-if="!mail.listLoading && !mail.messages.length"
-        class="column flex-center text-grey q-pa-xl"
+        class="column flex-center text-grey q-pa-xl empty-state"
       >
-        <q-icon name="inbox" size="48px" />
-        <div class="text-subtitle1 q-mt-sm">{{ t('mail.empty') }}</div>
+        <div class="empty-icon"><q-icon name="inbox" size="30px" /></div>
+        <div class="text-subtitle1 text-weight-medium q-mt-md">{{ t('mail.empty') }}</div>
         <div class="text-caption">{{ t('mail.emptyHint') }}</div>
       </div>
 
       <div
         v-for="m in mail.messages"
         :key="m.uid"
-        class="mail-list-item row no-wrap items-start q-px-sm q-py-sm"
+        class="mail-list-item row no-wrap items-start"
         :class="{ 'is-selected': mail.selectedUids.includes(m.uid), 'is-unread': !m.seen }"
         @click="onClick($event, m.uid)"
       >
@@ -83,27 +90,28 @@
           @click.stop
         />
         <q-avatar
-          size="34px"
+          size="38px"
           text-color="white"
-          class="q-mr-sm q-mt-xs text-caption text-weight-bold"
+          class="q-mr-sm text-caption text-weight-bold"
           :style="{ background: avatarColor(m.from?.email ?? '') }"
         >
           {{ initials(m.from) }}
         </q-avatar>
         <div class="col" style="min-width: 0">
-          <div class="row no-wrap items-baseline">
+          <div class="row no-wrap items-center">
             <div class="mail-list-from col">{{ displayName(m.from) }}</div>
             <div class="mail-list-date q-ml-sm">{{ listDate(m.date, locale) }}</div>
           </div>
-          <div class="row no-wrap items-center">
+          <div class="row no-wrap items-center q-mt-xs">
+            <span v-if="!m.seen" class="unread-dot q-mr-xs" />
             <div class="mail-list-subject col">{{ m.subject || t('mail.noSubject') }}</div>
             <q-icon
               v-if="m.has_attachments"
               name="attach_file"
-              size="14px"
+              size="15px"
               class="text-grey q-ml-xs"
             />
-            <q-icon v-if="m.answered" name="reply" size="14px" class="text-grey q-ml-xs" />
+            <q-icon v-if="m.answered" name="reply" size="15px" class="text-grey q-ml-xs" />
             <q-icon
               :name="m.flagged ? 'flag' : 'outlined_flag'"
               size="16px"
@@ -112,7 +120,7 @@
               @click.stop="mail.toggleFlag(m.uid)"
             />
           </div>
-          <div class="mail-list-preview" v-if="m.preview">{{ m.preview }}</div>
+          <div class="mail-list-preview q-mt-xs" v-if="m.preview">{{ m.preview }}</div>
         </div>
       </div>
 
@@ -188,9 +196,17 @@ function onScroll() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.search-input :deep(.q-field__control) {
+  border-radius: 12px;
+}
+.filter-toggle :deep(.q-btn) {
+  font-size: 12.5px;
+  padding: 2px 12px;
+  font-weight: 500;
+}
 .select-box {
-  opacity: 0.35;
+  opacity: 0;
 }
 .mail-list-item:hover .select-box,
 .mail-list-item.is-selected .select-box {
@@ -198,5 +214,17 @@ function onScroll() {
 }
 .flag-icon {
   cursor: pointer;
+}
+.empty-state {
+  min-height: 300px;
+}
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: var(--mail-surface-2);
+  color: var(--mail-muted);
 }
 </style>

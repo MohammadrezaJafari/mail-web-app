@@ -7,32 +7,42 @@
         no-caps
         icon="edit"
         :label="t('mail.newMail')"
-        class="full-width"
+        class="full-width new-mail-btn"
+        size="md"
         @click="compose.start({ mode: 'new' })"
       />
     </div>
 
-    <div class="mail-scroll">
-      <q-list dense padding>
-        <q-item-label header class="row items-center">
-          <span>{{ t('mail.folders') }}</span>
-          <q-space />
-          <q-btn flat dense round size="sm" icon="create_new_folder" @click="newFolder">
-            <q-tooltip>{{ t('mail.newFolder') }}</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            dense
-            round
-            size="sm"
-            icon="refresh"
-            :loading="mail.foldersLoading"
-            @click="mail.refresh()"
-          >
-            <q-tooltip>{{ t('mail.refresh') }}</q-tooltip>
-          </q-btn>
-        </q-item-label>
+    <div class="row items-center q-px-md q-pb-xs">
+      <span class="pane-title">{{ t('mail.folders') }}</span>
+      <q-space />
+      <q-btn
+        flat
+        dense
+        round
+        size="sm"
+        icon="create_new_folder"
+        class="text-grey-6"
+        @click="newFolder"
+      >
+        <q-tooltip>{{ t('mail.newFolder') }}</q-tooltip>
+      </q-btn>
+      <q-btn
+        flat
+        dense
+        round
+        size="sm"
+        icon="refresh"
+        class="text-grey-6"
+        :loading="mail.foldersLoading"
+        @click="mail.refresh()"
+      >
+        <q-tooltip>{{ t('mail.refresh') }}</q-tooltip>
+      </q-btn>
+    </div>
 
+    <div class="mail-scroll q-px-sm q-pb-sm">
+      <q-list dense>
         <q-item
           v-for="folder in mail.folders"
           :key="folder.path"
@@ -42,19 +52,21 @@
           class="folder-item"
           @click="mail.openFolder(folder.path)"
         >
-          <q-item-section avatar style="min-width: 36px">
+          <q-item-section avatar style="min-width: 34px">
             <q-icon :name="iconFor(folder.role)" size="20px" />
           </q-item-section>
           <q-item-section>
-            <q-item-label :class="{ 'text-weight-bold': folder.unread > 0 }" class="ellipsis">{{
-              labelFor(folder)
-            }}</q-item-label>
+            <q-item-label
+              :class="{ 'text-weight-bold': folder.unread > 0 }"
+              class="ellipsis folder-label"
+              >{{ labelFor(folder) }}</q-item-label
+            >
           </q-item-section>
           <q-item-section
             side
             v-if="folder.unread > 0 && folder.role !== 'trash' && folder.role !== 'junk'"
           >
-            <span class="text-primary text-weight-bold text-caption">{{ folder.unread }}</span>
+            <q-badge color="primary" rounded class="count-badge">{{ folder.unread }}</q-badge>
           </q-item-section>
           <q-item-section side v-else-if="folder.role === 'drafts' && folder.total > 0">
             <span class="text-grey text-caption">{{ folder.total }}</span>
@@ -64,7 +76,7 @@
     </div>
 
     <q-separator />
-    <div class="q-pa-sm">
+    <div class="q-pa-md">
       <storage-meter compact />
     </div>
   </div>
@@ -124,13 +136,28 @@ function newFolder() {
 </script>
 
 <style scoped lang="scss">
+.new-mail-btn {
+  border-radius: 12px;
+  height: 42px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15, 108, 189, 0.28);
+}
 .folder-item {
-  border-radius: 6px;
-  margin: 0 6px;
-  min-height: 34px;
+  border-radius: 10px;
+  margin: 1px 0;
+  min-height: 38px;
+  color: var(--mail-text);
+}
+.folder-label {
+  font-size: 14px;
 }
 .folder-active {
   background: var(--mail-selected);
-  color: $primary;
+  color: var(--mail-primary);
+  font-weight: 600;
+}
+.count-badge {
+  font-size: 11px;
+  padding: 3px 7px;
 }
 </style>

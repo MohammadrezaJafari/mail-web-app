@@ -1,9 +1,12 @@
 <template>
   <q-layout view="hHh LpR fFf">
-    <q-header class="bg-primary text-white" height-hint="48">
-      <q-toolbar style="min-height: 48px">
-        <q-btn flat dense round icon="menu" class="lt-md" @click="drawer = !drawer" />
-        <q-toolbar-title shrink class="text-weight-bold">{{ appName }}</q-toolbar-title>
+    <q-header class="app-header" height-hint="56">
+      <q-toolbar class="q-px-md" style="min-height: 56px">
+        <q-btn flat dense round icon="menu" class="lt-md q-mr-sm" @click="drawer = !drawer" />
+        <div class="row items-center no-wrap brand">
+          <div class="brand-logo"><q-icon name="mail" size="18px" /></div>
+          <span class="brand-name">{{ appName }}</span>
+        </div>
 
         <q-space />
 
@@ -12,6 +15,7 @@
           flat
           dense
           no-caps
+          class="rounded-btn header-btn"
           icon="open_in_new"
           :label="$q.screen.gt.sm ? t('nav.webmail') : undefined"
           type="a"
@@ -19,32 +23,32 @@
           target="_blank"
           rel="noopener"
         />
-        <language-toggle />
+        <language-toggle class="header-btn" />
         <q-btn
           flat
           dense
           round
+          class="header-btn"
           :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
           @click="$q.dark.toggle()"
         />
 
         <q-btn flat dense round class="q-ml-sm">
-          <q-avatar
-            size="30px"
-            color="white"
-            text-color="primary"
-            class="text-weight-bold text-caption"
-            >{{ auth.initials }}</q-avatar
-          >
-          <q-menu anchor="bottom right" self="top right">
-            <q-list style="min-width: 220px">
+          <q-avatar size="34px" class="user-avatar text-weight-bold">{{ auth.initials }}</q-avatar>
+          <q-menu anchor="bottom right" self="top right" class="rounded-menu">
+            <q-list style="min-width: 240px" class="q-py-sm">
               <q-item>
+                <q-item-section avatar
+                  ><q-avatar class="user-avatar text-weight-bold">{{
+                    auth.initials
+                  }}</q-avatar></q-item-section
+                >
                 <q-item-section>
-                  <q-item-label class="text-weight-medium">{{ auth.user?.name }}</q-item-label>
+                  <q-item-label class="text-weight-semibold">{{ auth.user?.name }}</q-item-label>
                   <q-item-label caption dir="ltr">{{ auth.user?.email }}</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-separator />
+              <q-separator class="q-my-sm" />
               <q-item clickable v-close-popup :to="{ name: 'settings' }">
                 <q-item-section avatar><q-icon name="settings" /></q-item-section>
                 <q-item-section>{{ t('nav.settings') }}</q-item-section>
@@ -60,39 +64,36 @@
     </q-header>
 
     <!-- Narrow app rail (Outlook style) -->
-    <q-drawer
-      v-model="drawer"
-      show-if-above
-      :width="56"
-      :breakpoint="1024"
-      bordered
-      class="app-rail"
-    >
-      <q-list padding>
-        <q-item
-          clickable
+    <q-drawer v-model="drawer" show-if-above :width="68" :breakpoint="1024" class="app-rail">
+      <div class="column items-center q-pt-md q-gutter-y-xs">
+        <q-btn
+          flat
+          no-caps
           :to="{ name: 'mail' }"
-          :active="isMail"
-          active-class="rail-active"
-          class="column items-center q-py-sm"
+          class="rail-btn"
+          :class="{ 'rail-active': isMail }"
         >
-          <q-icon name="mail" size="24px">
-            <q-badge v-if="mail.unreadInbox" color="negative" floating rounded>{{
-              mail.unreadInbox
-            }}</q-badge>
-          </q-icon>
-          <div class="rail-label">{{ t('nav.mail') }}</div>
-        </q-item>
-        <q-item
-          clickable
+          <div class="column items-center">
+            <q-icon name="mail" size="22px" />
+            <span v-if="mail.unreadInbox" class="rail-badge">{{
+              mail.unreadInbox > 99 ? '99+' : mail.unreadInbox
+            }}</span>
+            <div class="rail-label">{{ t('nav.mail') }}</div>
+          </div>
+        </q-btn>
+        <q-btn
+          flat
+          no-caps
           :to="{ name: 'settings' }"
-          active-class="rail-active"
-          class="column items-center q-py-sm"
+          class="rail-btn"
+          :class="{ 'rail-active': route.name === 'settings' }"
         >
-          <q-icon name="settings" size="24px" />
-          <div class="rail-label">{{ t('nav.settings') }}</div>
-        </q-item>
-      </q-list>
+          <div class="column items-center">
+            <q-icon name="tune" size="22px" />
+            <div class="rail-label">{{ t('nav.settings') }}</div>
+          </div>
+        </q-btn>
+      </div>
     </q-drawer>
 
     <q-page-container>
@@ -115,7 +116,7 @@ import LanguageToggle from '@/components/LanguageToggle.vue';
 import { APP_NAME } from '@/utils/format';
 import ComposeWindow from '@/components/mail/ComposeWindow.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
@@ -123,7 +124,7 @@ const auth = useAuthStore();
 const mail = useMailStore();
 const compose = useComposeStore();
 
-const appName = APP_NAME;
+const appName = computed(() => (locale.value === 'fa-IR' ? t('app.name') : APP_NAME));
 const drawer = ref(false);
 const isMail = computed(() => String(route.name ?? '').startsWith('mail'));
 
@@ -141,23 +142,60 @@ async function signOut() {
 </script>
 
 <style lang="scss">
+.app-header {
+  background: var(--mail-surface);
+  color: var(--mail-text);
+  border-bottom: 1px solid var(--mail-border);
+  box-shadow: none;
+}
+.brand {
+  gap: 10px;
+}
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #0f6cbd, #2b88d8);
+  box-shadow: 0 4px 12px rgba(15, 108, 189, 0.35);
+}
+.brand-name {
+  font-weight: 700;
+  font-size: 17px;
+}
+.header-btn {
+  color: var(--mail-muted);
+}
+.user-avatar {
+  background: linear-gradient(135deg, #0f6cbd, #7160e8);
+  color: #fff;
+  font-size: 13px;
+}
+.rounded-menu {
+  border-radius: 12px;
+}
 .app-rail {
-  background: var(--mail-rail-bg);
+  background: var(--mail-bg);
+  border-right: 0 !important;
 
-  .q-item {
-    border-radius: 8px;
-    margin: 2px 6px;
-    min-height: 56px;
-    padding: 6px 0;
+  .rail-btn {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
     color: var(--mail-muted);
+    padding: 0;
   }
   .rail-active {
-    color: $primary;
+    color: var(--mail-primary);
     background: var(--mail-selected);
   }
   .rail-label {
-    font-size: 10px;
-    margin-top: 2px;
+    font-size: 10.5px;
+    margin-top: 3px;
+    font-weight: 500;
   }
 }
 </style>

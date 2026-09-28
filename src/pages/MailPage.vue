@@ -1,19 +1,14 @@
 <template>
-  <q-page class="mail-page row no-wrap">
-    <!-- Folder pane -->
+  <q-page class="mail-page row no-wrap q-gutter-x-md">
     <folder-pane
       class="col-auto folder-pane"
       :class="{ 'lt-md-hidden': $q.screen.lt.md && (mail.current || mobileView !== 'folders') }"
     />
-
-    <!-- Message list pane -->
     <message-list
       class="col-auto list-pane"
       :class="{ 'lt-md-hidden': $q.screen.lt.md && (mail.current || mobileView === 'folders') }"
       @open="openMessage"
     />
-
-    <!-- Reading pane -->
     <reading-pane
       class="col reading-pane"
       :class="{ 'lt-md-hidden': $q.screen.lt.md && !mail.current }"
@@ -82,22 +77,26 @@ async function openMessage(uid: number) {
 
 <style scoped lang="scss">
 .mail-page {
-  height: calc(100vh - 48px);
+  height: calc(100vh - 56px);
   overflow: hidden;
+  padding: 16px 16px 16px 0;
+}
+html[dir='rtl'] .mail-page {
+  padding: 16px 0 16px 16px;
 }
 .folder-pane {
-  width: 240px;
-  background: var(--mail-folder-bg);
+  width: 250px;
 }
 .list-pane {
-  width: 380px;
-  background: var(--mail-list-bg);
+  width: 400px;
 }
 .reading-pane {
   min-width: 0;
-  background: var(--mail-list-bg);
 }
 @media (max-width: 1023px) {
+  .mail-page {
+    padding: 8px;
+  }
   .folder-pane,
   .list-pane,
   .reading-pane {

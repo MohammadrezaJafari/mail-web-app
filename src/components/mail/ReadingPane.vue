@@ -2,7 +2,7 @@
   <div class="mail-pane reading">
     <template v-if="mail.current">
       <!-- Toolbar -->
-      <q-toolbar class="reading-toolbar">
+      <q-toolbar class="reading-toolbar soft-toolbar q-px-sm">
         <q-btn flat dense round icon="arrow_back" class="lt-md" @click="emit('back')" />
         <q-btn
           flat
@@ -70,7 +70,9 @@
       <q-separator />
 
       <div class="mail-scroll q-pa-md">
-        <div class="text-h6 q-mb-sm">{{ mail.current.subject || t('mail.noSubject') }}</div>
+        <div class="text-h6 q-mb-sm bidi-auto">
+          {{ mail.current.subject || t('mail.noSubject') }}
+        </div>
 
         <div class="row no-wrap items-start q-mb-md">
           <q-avatar
@@ -128,8 +130,8 @@
 
     <div v-else class="column flex-center text-grey full-height q-pa-xl">
       <q-inner-loading :showing="mail.currentLoading" />
-      <q-icon name="drafts" size="64px" />
-      <div class="text-subtitle1 q-mt-sm">{{ t('mail.noSelection') }}</div>
+      <div class="empty-hero"><q-icon name="drafts" size="44px" /></div>
+      <div class="text-subtitle1 text-weight-medium q-mt-md">{{ t('mail.noSelection') }}</div>
       <div class="text-caption">{{ t('mail.noSelectionHint') }}</div>
     </div>
     <q-inner-loading :showing="mail.currentLoading && !!mail.current" />
@@ -173,7 +175,7 @@ const htmlDoc = computed(() => {
   });
   const dir = locale.value === 'fa-IR' ? 'rtl' : 'ltr';
   return `<!doctype html><html dir="${dir}"><head><meta charset="utf-8"><base target="_blank">
-<style>body{font-family:'Segoe UI',Roboto,Vazirmatn,Tahoma,sans-serif;font-size:14px;line-height:1.5;margin:0;padding:4px;color:#1f1f1f;word-break:break-word}img{max-width:100%;height:auto}a{color:#0f6cbd}blockquote{border-left:3px solid #ddd;margin:8px 0;padding-left:10px;color:#555}</style>
+<style>body{font-family:'Segoe UI',Roboto,Vazirmatn,Tahoma,sans-serif;font-size:14px;line-height:1.5;margin:0;padding:4px;color:#1f1f1f;word-break:break-word}p,li,div,td,blockquote{unicode-bidi:plaintext;text-align:start}img{max-width:100%;height:auto}a{color:#0f6cbd}blockquote{border-left:3px solid #ddd;margin:8px 0;padding-left:10px;color:#555}</style>
 </head><body>${clean}</body></html>`;
 });
 
@@ -220,11 +222,20 @@ async function download(a: Attachment) {
 
 <style scoped lang="scss">
 .reading {
-  border-inline-end: 0;
   position: relative;
 }
 .reading-toolbar {
-  min-height: 44px;
+  min-height: 52px;
+  gap: 2px;
+}
+.empty-hero {
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--mail-selected), var(--mail-surface-2));
+  color: var(--mail-primary);
 }
 .plain-body {
   white-space: pre-wrap;

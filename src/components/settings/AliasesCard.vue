@@ -1,8 +1,11 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1 text-weight-medium">{{ t('settings.aliases') }}</div>
-      <div class="text-caption text-grey">{{ t('settings.aliasesHint') }}</div>
+  <q-card flat class="settings-card">
+    <q-card-section class="card-head">
+      <div class="card-icon"><q-icon name="alternate_email" size="20px" /></div>
+      <div class="col">
+        <div class="text-subtitle1 text-weight-semibold">{{ t('settings.aliases') }}</div>
+        <div class="text-caption text-grey">{{ t('settings.aliasesHint') }}</div>
+      </div>
     </q-card-section>
     <q-separator />
     <q-list separator>
