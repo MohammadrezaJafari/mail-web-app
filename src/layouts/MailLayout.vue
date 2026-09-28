@@ -84,6 +84,30 @@
         <q-btn
           flat
           no-caps
+          :to="{ name: 'calendar' }"
+          class="rail-btn"
+          :class="{ 'rail-active': route.name === 'calendar' }"
+        >
+          <div class="column items-center">
+            <q-icon name="calendar_month" size="22px" />
+            <div class="rail-label">{{ t('nav.calendar') }}</div>
+          </div>
+        </q-btn>
+        <q-btn
+          flat
+          no-caps
+          :to="{ name: 'people' }"
+          class="rail-btn"
+          :class="{ 'rail-active': route.name === 'people' }"
+        >
+          <div class="column items-center">
+            <q-icon name="people" size="22px" />
+            <div class="rail-label">{{ t('nav.people') }}</div>
+          </div>
+        </q-btn>
+        <q-btn
+          flat
+          no-caps
           :to="{ name: 'settings' }"
           class="rail-btn"
           :class="{ 'rail-active': route.name === 'settings' }"

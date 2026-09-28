@@ -10,6 +10,7 @@ Outlook-style user portal and webmail for the Mail product. Talks only to the
 - Compose / reply / reply-all / forward with attachments and "send as alias".
 - Move, delete, flag, mark read/unread, search, unread/flagged filters, infinite scroll.
 - Settings: storage usage, aliases, password, forwarding, automatic replies, signature.
+- Calendar (month / week / agenda) and People (address book) backed by CalDAV/CardDAV.
 - English + Persian (RTL) UI, light/dark theme, "Open webmail (SOGo)" shortcut.
 
 ## Development

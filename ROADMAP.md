@@ -19,4 +19,5 @@ PHP-FPM request workers; needs its own process manager and monitoring.
 
 - Safe senders list, unblock UI (block sender exists via rules)
 - Inline images and tables in compose, multiple signatures
-- Calendar & contacts (CalDAV/CardDAV via SOGo)
+- Calendar: invitations (iTIP), reminders, drag-to-move events, day view
+- Contacts: groups/lists, photo, vCard import/export

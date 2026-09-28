@@ -1,6 +1,12 @@
 import { api } from '@/boot/axios';
 import type {
+  AddressBook,
   AliasSummary,
+  Calendar,
+  CalendarEvent,
+  Contact,
+  ContactPayload,
+  EventPayload,
   ContactSuggestion,
   ComposeDraft,
   Folder,
@@ -152,3 +158,33 @@ export function errorMessage(error: unknown, fallback = 'Something went wrong'):
   }
   return e?.response?.data?.message ?? fallback;
 }
+
+export const calendarApi = {
+  calendars: () => api.get<{ data: Calendar[] }>('/calendar/calendars').then((r) => r.data.data),
+  events: (start: string, end: string, calendar?: string | null) =>
+    api
+      .get<{ data: CalendarEvent[]; calendars: Calendar[] }>('/calendar/events', {
+        params: { start, end, calendar: calendar || undefined },
+      })
+      .then((r) => r.data),
+  create: (payload: EventPayload) =>
+    api.post<{ data: CalendarEvent }>('/calendar/events', payload).then((r) => r.data.data),
+  update: (id: string, payload: EventPayload) =>
+    api.put<{ data: CalendarEvent }>(`/calendar/events/${id}`, payload).then((r) => r.data.data),
+  delete: (id: string) => api.delete(`/calendar/events/${id}`),
+};
+
+export const addressBookApi = {
+  books: () => api.get<{ data: AddressBook[] }>('/addressbook/books').then((r) => r.data.data),
+  contacts: (q = '', book?: string | null) =>
+    api
+      .get<{ data: Contact[]; books: AddressBook[] }>('/addressbook/contacts', {
+        params: { q: q || undefined, book: book || undefined },
+      })
+      .then((r) => r.data),
+  create: (payload: ContactPayload) =>
+    api.post<{ data: Contact }>('/addressbook/contacts', payload).then((r) => r.data.data),
+  update: (id: string, payload: ContactPayload) =>
+    api.put<{ data: Contact }>(`/addressbook/contacts/${id}`, payload).then((r) => r.data.data),
+  delete: (id: string) => api.delete(`/addressbook/contacts/${id}`),
+};

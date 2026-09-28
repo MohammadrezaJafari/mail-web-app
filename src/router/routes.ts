@@ -19,6 +19,8 @@ const routes: RouteRecordRaw[] = [
         name: 'mail.folder',
         component: () => import('@/pages/MailPage.vue'),
       },
+      { path: 'calendar', name: 'calendar', component: () => import('@/pages/CalendarPage.vue') },
+      { path: 'people', name: 'people', component: () => import('@/pages/ContactsPage.vue') },
       { path: 'settings', name: 'settings', component: () => import('@/pages/SettingsPage.vue') },
     ],
   },

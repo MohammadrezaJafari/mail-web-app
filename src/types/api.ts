@@ -211,3 +211,71 @@ export interface SnoozedItem {
   wake_at: string;
   origin_folder: string;
 }
+
+export interface Calendar {
+  id: string;
+  href: string;
+  name: string;
+  color: string | null;
+  description: string | null;
+}
+
+export interface CalendarEvent {
+  id: string;
+  href: string;
+  etag: string | null;
+  calendar_id: string;
+  calendar_name?: string;
+  color: string | null;
+  uid: string;
+  summary: string;
+  description: string;
+  location: string;
+  start: string; // ISO datetime, or YYYY-MM-DD when all_day
+  end: string;
+  all_day: boolean;
+  recurring: boolean;
+  recurrence_id: string | null;
+  status: string;
+}
+
+export interface EventPayload {
+  calendar_id?: string;
+  summary: string;
+  description: string;
+  location: string;
+  start: string;
+  end: string;
+  all_day: boolean;
+}
+
+export interface AddressBook {
+  id: string;
+  href: string;
+  name: string;
+}
+
+export interface ContactField {
+  value: string;
+  type: string;
+}
+
+export interface Contact {
+  id: string;
+  href: string;
+  etag: string | null;
+  book_id: string;
+  uid: string;
+  name: string;
+  first_name: string;
+  last_name: string;
+  emails: ContactField[];
+  phones: ContactField[];
+  org: string;
+  title: string;
+  note: string;
+}
+
+export type ContactPayload = Omit<Contact, 'id' | 'href' | 'etag' | 'uid' | 'book_id'> & {
+  book_id?: string;
+};
