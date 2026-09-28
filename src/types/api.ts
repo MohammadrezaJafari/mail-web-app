@@ -155,3 +155,41 @@ export interface ContactSuggestion {
   name: string | null;
   source: 'personal' | 'directory';
 }
+
+export interface FolderNode extends Folder {
+  label: string;
+  depth: number;
+  children: FolderNode[];
+}
+
+export interface SearchCriteria {
+  from: string;
+  to: string;
+  subject: string;
+  since: string;
+  before: string;
+}
+
+export type RuleField = 'from' | 'to' | 'subject' | 'body' | 'size_over' | 'has_attachment';
+export type RuleOperator = 'contains' | 'not_contains' | 'is' | 'starts' | 'ends';
+export type RuleActionType = 'move' | 'flag' | 'mark_read' | 'forward' | 'discard' | 'stop';
+
+export interface RuleCondition {
+  field: RuleField;
+  operator: RuleOperator;
+  value: string;
+}
+
+export interface RuleAction {
+  type: RuleActionType;
+  value: string;
+}
+
+export interface MailRule {
+  id?: string;
+  name: string;
+  enabled: boolean;
+  match: 'all' | 'any';
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+}

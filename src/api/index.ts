@@ -6,6 +6,8 @@ import type {
   Folder,
   Mailbox,
   MailboxSettingsPayload,
+  MailRule,
+  SearchCriteria,
   MeResponse,
   MessageDetail,
   MessageFilter,
@@ -33,6 +35,9 @@ export const accountApi = {
     api.post<{ data: AliasSummary }>('/me/aliases', { local_part }).then((r) => r.data.data),
   deleteAlias: (id: number) => api.delete(`/me/aliases/${id}`),
   webmail: () => api.get<{ url: string }>('/me/webmail').then((r) => r.data.url),
+  rules: () => api.get<{ data: MailRule[] }>('/me/mailbox/rules').then((r) => r.data.data),
+  saveRules: (rules: MailRule[]) =>
+    api.put<{ data: MailRule[] }>('/me/mailbox/rules', { rules }).then((r) => r.data.data),
 };
 
 export const contactsApi = {
@@ -46,9 +51,22 @@ export const contactsApi = {
 
 export const mailApi = {
   folders: () => api.get<{ data: Folder[] }>('/mail/folders').then((r) => r.data.data),
-  createFolder: (name: string) =>
-    api.post<{ data: Folder[] }>('/mail/folders', { name }).then((r) => r.data.data),
-  messages: (folder: string, page = 1, search = '', filter: MessageFilter = null, per_page = 25) =>
+  createFolder: (name: string, parent?: string | null) =>
+    api
+      .post<{ data: Folder[] }>('/mail/folders', { name, parent: parent || undefined })
+      .then((r) => r.data.data),
+  renameFolder: (path: string, name: string) =>
+    api.put<{ data: Folder[] }>('/mail/folders', { path, name }).then((r) => r.data.data),
+  deleteFolder: (path: string) =>
+    api.delete<{ data: Folder[] }>('/mail/folders', { data: { path } }).then((r) => r.data.data),
+  messages: (
+    folder: string,
+    page = 1,
+    search = '',
+    filter: MessageFilter = null,
+    per_page = 25,
+    criteria?: Partial<SearchCriteria>,
+  ) =>
     api
       .get<MessagePage>('/mail/messages', {
         params: {
@@ -57,6 +75,11 @@ export const mailApi = {
           per_page,
           search: search || undefined,
           filter: filter ?? undefined,
+          from: criteria?.from || undefined,
+          to: criteria?.to || undefined,
+          subject: criteria?.subject || undefined,
+          since: criteria?.since || undefined,
+          before: criteria?.before || undefined,
         },
       })
       .then((r) => r.data),

@@ -21,6 +21,7 @@
         <account-card />
         <aliases-card />
         <password-card />
+        <rules-card />
       </div>
       <div class="col-12 col-md-6 column q-gutter-y-lg">
         <forwarding-card />
@@ -43,6 +44,7 @@ import ForwardingCard from '@/components/settings/ForwardingCard.vue';
 import AutoReplyCard from '@/components/settings/AutoReplyCard.vue';
 import SignatureCard from '@/components/settings/SignatureCard.vue';
 import NotificationsCard from '@/components/settings/NotificationsCard.vue';
+import RulesCard from '@/components/settings/RulesCard.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();

@@ -17,7 +17,7 @@ PHP-FPM request workers; needs its own process manager and monitoring.
 
 ## Next candidates
 
-- Drag & drop, context menu, keyboard shortcuts (in progress)
-- Nested (tree) folders, advanced search filters
-- Server-side rules (Sieve) UI, blocked/safe senders
+- Blocked / safe senders (could be built on rules)
+- Snooze, schedule send, undo send
+- Inline images and tables in compose, multiple signatures
 - Calendar & contacts (CalDAV/CardDAV via SOGo)

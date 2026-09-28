@@ -34,6 +34,7 @@
           @update:model-value="(v) => mail.setFilter(v)"
         />
         <q-space />
+        <advanced-search />
         <template v-if="mail.selectedUids.length > 1 && !mail.threadKey">
           <span class="text-caption text-grey q-mr-xs">{{
             t('mail.selected', { n: mail.selectedUids.length })
@@ -68,6 +69,19 @@
           }}</q-tooltip>
         </q-btn>
       </div>
+    </div>
+    <div v-if="mail.hasCriteria" class="q-px-md q-pb-sm row q-gutter-xs">
+      <q-chip
+        v-for="(v, k) in activeCriteria"
+        :key="k"
+        dense
+        removable
+        color="blue-1"
+        text-color="primary"
+        @remove="mail.setCriteria({ ...mail.criteria, [k]: '' })"
+      >
+        {{ criteriaLabel(k) }}: {{ v }}
+      </q-chip>
     </div>
     <q-separator />
 
@@ -261,6 +275,7 @@ import { errorMessage } from '@/api';
 import type { MessageFilter, Thread } from '@/types/api';
 import ThreadAvatars from '@/components/mail/ThreadAvatars.vue';
 import RowContextMenu from '@/components/mail/RowContextMenu.vue';
+import AdvancedSearch from '@/components/mail/AdvancedSearch.vue';
 
 const emit = defineEmits<{ open: [uid: number]; openThread: [thread: Thread] }>();
 const { t, locale } = useI18n();
@@ -273,6 +288,22 @@ const searchInput = ref<QInput | null>(null);
 const moveTargets = computed(() => mail.folders.filter((f) => f.path !== mail.currentFolder));
 
 defineExpose({ focusSearch: () => searchInput.value?.focus() });
+
+const activeCriteria = computed(() =>
+  Object.fromEntries(Object.entries(mail.criteria).filter(([, v]) => v !== '')),
+);
+
+function criteriaLabel(key: string): string {
+  return (
+    {
+      from: t('mail.from'),
+      to: t('mail.to'),
+      subject: t('mail.subject'),
+      since: t('search.since'),
+      before: t('search.before'),
+    }[key] ?? key
+  );
+}
 
 export interface DragPayload {
   uids: number[];

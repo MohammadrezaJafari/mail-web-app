@@ -8,14 +8,20 @@ import type {
   MessageDetail,
   MessageFilter,
   MessageSummary,
+  SearchCriteria,
   Thread,
 } from '@/types/api';
+import { buildFolderTree } from '@/utils/folderTree';
 
 const PER_PAGE = 25;
 const CONVERSATION_KEY = 'mail.conversationView';
 
 function emptyUidMap(): Record<string, number> {
   return {};
+}
+
+function emptyCriteria(): SearchCriteria {
+  return { from: '', to: '', subject: '', since: '', before: '' };
 }
 
 export const useMailStore = defineStore('mail', {
@@ -28,6 +34,7 @@ export const useMailStore = defineStore('mail', {
     page: 1,
     listLoading: false,
     search: '',
+    criteria: emptyCriteria(),
     filter: null as MessageFilter,
     selectedUids: [] as number[],
     current: null as MessageDetail | null,
@@ -50,6 +57,8 @@ export const useMailStore = defineStore('mail', {
     hasMore: (s) => s.messages.length < s.total,
     unreadInbox: (s) => s.folders.find((f) => f.role === 'inbox')?.unread ?? 0,
     threads: (s): Thread[] => (s.conversationView ? buildThreads(s.messages) : []),
+    folderTree: (s) => buildFolderTree(s.folders),
+    hasCriteria: (s) => Object.values(s.criteria).some((v) => v !== ''),
   },
 
   actions: {
@@ -116,6 +125,16 @@ export const useMailStore = defineStore('mail', {
 
     async setSearch(search: string) {
       this.search = search;
+      await this.loadMessages(true);
+    },
+
+    async setCriteria(criteria: Partial<SearchCriteria>) {
+      this.criteria = { ...emptyCriteria(), ...criteria };
+      await this.loadMessages(true);
+    },
+
+    async clearCriteria() {
+      this.criteria = emptyCriteria();
       await this.loadMessages(true);
     },
 
@@ -263,7 +282,7 @@ export const useMailStore = defineStore('mail', {
         const fresh = await mailApi.messagesSince(this.currentFolder, since);
         const known = new Set(this.messages.map((m) => m.uid));
         const added = fresh.data.filter((m) => !known.has(m.uid));
-        if (added.length && !this.search && !this.filter) {
+        if (added.length && !this.search && !this.filter && !this.hasCriteria) {
           this.messages = [...added, ...this.messages];
           this.total += added.length;
         }
