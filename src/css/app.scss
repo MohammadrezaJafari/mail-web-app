@@ -1,0 +1,108 @@
+:root {
+  --mail-rail-bg: #f0f0f0;
+  --mail-folder-bg: #fafafa;
+  --mail-list-bg: #ffffff;
+  --mail-border: #e0e0e0;
+  --mail-hover: #f3f6fb;
+  --mail-selected: #e6f0fa;
+  --mail-unread: #1f1f1f;
+  --mail-muted: #616161;
+}
+
+body.body--dark {
+  --mail-rail-bg: #1b1b1b;
+  --mail-folder-bg: #202020;
+  --mail-list-bg: #1f1f1f;
+  --mail-border: #333333;
+  --mail-hover: #2a2a2a;
+  --mail-selected: #2b3a4d;
+  --mail-unread: #ffffff;
+  --mail-muted: #9e9e9e;
+}
+
+html,
+body {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Vazirmatn, Tahoma, sans-serif;
+}
+
+html[dir='rtl'] body {
+  font-family: Vazirmatn, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.mail-pane {
+  border-inline-end: 1px solid var(--mail-border);
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mail-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mail-list-item {
+  cursor: pointer;
+  border-bottom: 1px solid var(--mail-border);
+  border-inline-start: 3px solid transparent;
+
+  &:hover {
+    background: var(--mail-hover);
+  }
+
+  &.is-selected {
+    background: var(--mail-selected);
+    border-inline-start-color: $primary;
+  }
+
+  &.is-unread .mail-list-subject,
+  &.is-unread .mail-list-from {
+    font-weight: 600;
+    color: var(--mail-unread);
+  }
+}
+
+.mail-list-from,
+.mail-list-subject,
+.mail-list-preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mail-list-preview,
+.mail-list-date {
+  color: var(--mail-muted);
+  font-size: 12px;
+}
+
+.mail-body-frame {
+  width: 100%;
+  border: 0;
+  min-height: 320px;
+  background: #fff;
+}
+
+.compose-window {
+  position: fixed;
+  inset-inline-end: 24px;
+  bottom: 0;
+  width: min(720px, calc(100vw - 48px));
+  z-index: 3000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+
+  &.is-minimized {
+    width: 320px;
+  }
+}
+
+.compose-editor .q-editor__content {
+  min-height: 220px;
+}
