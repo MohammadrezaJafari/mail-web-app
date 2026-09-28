@@ -221,6 +221,27 @@ export const useMailStore = defineStore('mail', {
       await Promise.all([this.loadFolders(), this.loadMessages(true)]);
     },
 
+    /** Full message for actions started from a list row (reply/forward) without opening it. */
+    async detail(uid: number): Promise<MessageDetail> {
+      if (this.current?.uid === uid) return this.current;
+      const inThread = this.thread.find((m) => m.uid === uid);
+      return inThread ?? (await mailApi.message(this.currentFolder, uid, false));
+    },
+
+    /** UIDs an action should apply to: the whole selection when the uid is part of it. */
+    targetUids(uid: number): number[] {
+      return this.selectedUids.includes(uid) && this.selectedUids.length > 1
+        ? [...this.selectedUids]
+        : [uid];
+    },
+
+    async archive(uids: number[]): Promise<boolean> {
+      const archive = this.folderByRole('archive')?.path;
+      if (!archive || archive === this.currentFolder) return false;
+      await this.move(uids, archive);
+      return true;
+    },
+
     /**
      * Lightweight poll: one STATUS per folder. When the open folder gained
      * messages, fetch just those (UID range) and prepend them to the list.

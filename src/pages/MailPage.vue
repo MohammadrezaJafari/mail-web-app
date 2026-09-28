@@ -5,6 +5,7 @@
       :class="{ 'lt-md-hidden': $q.screen.lt.md && (mail.current || mobileView !== 'folders') }"
     />
     <message-list
+      ref="listRef"
       class="col-auto list-pane"
       :class="{ 'lt-md-hidden': $q.screen.lt.md && (mail.current || mobileView === 'folders') }"
       @open="openMessage"
@@ -15,6 +16,7 @@
       :class="{ 'lt-md-hidden': $q.screen.lt.md && !mail.current }"
       @back="mail.current = null"
     />
+    <shortcuts-dialog v-model="helpOpen" />
   </q-page>
 </template>
 
@@ -28,12 +30,47 @@ import FolderPane from '@/components/mail/FolderPane.vue';
 import MessageList from '@/components/mail/MessageList.vue';
 import ReadingPane from '@/components/mail/ReadingPane.vue';
 import type { Thread } from '@/types/api';
+import ShortcutsDialog from '@/components/mail/ShortcutsDialog.vue';
+import { useMailShortcuts } from '@/composables/useMailShortcuts';
+import { useI18n } from 'vue-i18n';
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const mail = useMailStore();
+const { t } = useI18n();
 const mobileView = ref<'folders' | 'list'>('list');
+const listRef = ref<{ focusSearch: () => void } | null>(null);
+
+const { helpOpen } = useMailShortcuts({
+  openThread,
+  openMessage,
+  focusSearch: () => listRef.value?.focusSearch(),
+  remove: () => {
+    if (!mail.current) return;
+    const uids = mail.threadKey
+      ? [mail.current.uid, ...mail.thread.map((m) => m.uid)]
+      : [mail.current.uid];
+    mail.remove(uids).then(
+      () => $q.notify({ type: 'positive', message: t('mail.deleted') }),
+      (e) => $q.notify({ type: 'negative', message: errorMessage(e) }),
+    );
+  },
+  archive: () => {
+    if (!mail.current) return;
+    const uids = mail.threadKey
+      ? [mail.current.uid, ...mail.thread.map((m) => m.uid)]
+      : [mail.current.uid];
+    mail.archive(uids).then(
+      (ok) =>
+        $q.notify({
+          type: ok ? 'positive' : 'warning',
+          message: ok ? t('mail.moved') : t('mail.noArchive'),
+        }),
+      (e) => $q.notify({ type: 'negative', message: errorMessage(e) }),
+    );
+  },
+});
 
 async function boot() {
   try {

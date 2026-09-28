@@ -50,7 +50,11 @@
           :active="folder.path === mail.currentFolder"
           active-class="folder-active"
           class="folder-item"
+          :class="{ 'drop-hover': dropTarget === folder.path }"
           @click="mail.openFolder(folder.path)"
+          @dragover="onDragOver($event, folder.path)"
+          @dragleave="dropTarget === folder.path && (dropTarget = null)"
+          @drop="onDrop($event, folder.path)"
         >
           <q-item-section avatar style="min-width: 34px">
             <q-icon :name="iconFor(folder.role)" size="20px" />
@@ -83,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import { useMailStore } from '@/stores/mail';
@@ -95,6 +100,35 @@ const { t } = useI18n();
 const $q = useQuasar();
 const mail = useMailStore();
 const compose = useComposeStore();
+const dropTarget = ref<string | null>(null);
+
+function onDragOver(event: DragEvent, path: string) {
+  if (!event.dataTransfer?.types.includes('application/x-mail-uids') || path === mail.currentFolder)
+    return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  dropTarget.value = path;
+}
+
+async function onDrop(event: DragEvent, path: string) {
+  dropTarget.value = null;
+  const raw = event.dataTransfer?.getData('application/x-mail-uids');
+  if (!raw) return;
+  event.preventDefault();
+  try {
+    const payload = JSON.parse(raw) as { uids: number[]; folder: string };
+    if (
+      payload.folder !== mail.currentFolder ||
+      path === mail.currentFolder ||
+      !payload.uids.length
+    )
+      return;
+    await mail.move(payload.uids, path);
+    $q.notify({ type: 'positive', message: t('mail.moved') });
+  } catch (e) {
+    $q.notify({ type: 'negative', message: errorMessage(e) });
+  }
+}
 
 function iconFor(role: FolderRole): string {
   switch (role) {
@@ -155,6 +189,11 @@ function newFolder() {
   background: var(--mail-selected);
   color: var(--mail-primary);
   font-weight: 600;
+}
+.drop-hover {
+  outline: 2px dashed var(--mail-primary);
+  outline-offset: -2px;
+  background: var(--mail-hover);
 }
 .count-badge {
   font-size: 11px;

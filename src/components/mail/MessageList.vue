@@ -94,8 +94,38 @@
           :key="th.key"
           class="mail-list-item row no-wrap items-start"
           :class="{ 'is-selected': mail.threadKey === th.key, 'is-unread': th.unread > 0 }"
+          draggable="true"
+          @dragstart="
+            onDragStart(
+              $event,
+              th.messages.map((m) => m.uid),
+            )
+          "
           @click="emit('openThread', th)"
         >
+          <row-context-menu
+            :seen="th.unread === 0"
+            :flagged="th.flagged"
+            :folders="moveTargets"
+            @open="emit('openThread', th)"
+            @reply="(mode) => replyFrom(th.latest.uid, mode)"
+            @seen="
+              (v) =>
+                mail.markSeen(
+                  th.messages.map((m) => m.uid),
+                  v,
+                )
+            "
+            @flag="mail.toggleFlag(th.latest.uid)"
+            @move="
+              (to) =>
+                moveTo(
+                  th.messages.map((m) => m.uid),
+                  to,
+                )
+            "
+            @delete="confirmDelete(th.messages.map((m) => m.uid))"
+          />
           <thread-avatars :participants="th.participants" class="q-mr-sm q-mt-xs" />
           <div class="col" style="min-width: 0">
             <div class="row no-wrap items-center">
@@ -146,8 +176,21 @@
           :key="m.uid"
           class="mail-list-item row no-wrap items-start"
           :class="{ 'is-selected': mail.selectedUids.includes(m.uid), 'is-unread': !m.seen }"
+          draggable="true"
+          @dragstart="onDragStart($event, mail.targetUids(m.uid))"
           @click="onClick($event, m.uid)"
         >
+          <row-context-menu
+            :seen="m.seen"
+            :flagged="m.flagged"
+            :folders="moveTargets"
+            @open="emit('open', m.uid)"
+            @reply="(mode) => replyFrom(m.uid, mode)"
+            @seen="(v) => mail.markSeen(mail.targetUids(m.uid), v)"
+            @flag="mail.toggleFlag(m.uid)"
+            @move="(to) => moveTo(mail.targetUids(m.uid), to)"
+            @delete="confirmDelete(mail.targetUids(m.uid))"
+          />
           <q-checkbox
             dense
             size="xs"
@@ -208,21 +251,71 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useQuasar } from 'quasar';
+import { useQuasar, type QInput } from 'quasar';
 import { useMailStore } from '@/stores/mail';
+import { useComposeStore, type ComposeMode } from '@/stores/compose';
 import { avatarColor, displayName, initials, listDate } from '@/utils/format';
 import { errorMessage } from '@/api';
 import type { MessageFilter, Thread } from '@/types/api';
 import ThreadAvatars from '@/components/mail/ThreadAvatars.vue';
+import RowContextMenu from '@/components/mail/RowContextMenu.vue';
 
 const emit = defineEmits<{ open: [uid: number]; openThread: [thread: Thread] }>();
 const { t, locale } = useI18n();
 const $q = useQuasar();
 const mail = useMailStore();
+const compose = useComposeStore();
 
 const search = ref('');
+const searchInput = ref<QInput | null>(null);
+const moveTargets = computed(() => mail.folders.filter((f) => f.path !== mail.currentFolder));
+
+defineExpose({ focusSearch: () => searchInput.value?.focus() });
+
+export interface DragPayload {
+  uids: number[];
+  folder: string;
+}
+
+function onDragStart(event: DragEvent, uids: number[]) {
+  const payload: DragPayload = { uids, folder: mail.currentFolder };
+  event.dataTransfer?.setData('application/x-mail-uids', JSON.stringify(payload));
+  event.dataTransfer?.setData('text/plain', `${uids.length} message(s)`);
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+}
+
+async function replyFrom(uid: number, mode: ComposeMode) {
+  try {
+    compose.start({ mode, source: await mail.detail(uid) });
+  } catch (e) {
+    $q.notify({ type: 'negative', message: errorMessage(e) });
+  }
+}
+
+async function moveTo(uids: number[], to: string) {
+  try {
+    await mail.move(uids, to);
+    $q.notify({ type: 'positive', message: t('mail.moved') });
+  } catch (e) {
+    $q.notify({ type: 'negative', message: errorMessage(e) });
+  }
+}
+
+function confirmDelete(uids: number[]) {
+  $q.dialog({
+    title: t('mail.delete'),
+    message: t('common.deleteConfirm', { n: uids.length }, uids.length),
+    cancel: true,
+    ok: t('mail.delete'),
+  }).onOk(() => {
+    mail.remove(uids).then(
+      () => $q.notify({ type: 'positive', message: t('mail.deleted') }),
+      (e) => $q.notify({ type: 'negative', message: errorMessage(e) }),
+    );
+  });
+}
 const filter = ref<MessageFilter>(null);
 const scroller = ref<HTMLElement | null>(null);
 
@@ -290,6 +383,9 @@ function onScroll() {
 }
 .flag-icon {
   cursor: pointer;
+}
+.mail-list-item[draggable='true'] {
+  user-select: none;
 }
 .count-chip {
   font-size: 11px;
