@@ -34,7 +34,7 @@
           @update:model-value="(v) => mail.setFilter(v)"
         />
         <q-space />
-        <template v-if="mail.selectedUids.length > 1">
+        <template v-if="mail.selectedUids.length > 1 && !mail.threadKey">
           <span class="text-caption text-grey q-mr-xs">{{
             t('mail.selected', { n: mail.selectedUids.length })
           }}</span>
@@ -54,6 +54,19 @@
             ><q-tooltip>{{ t('mail.clearSelection') }}</q-tooltip></q-btn
           >
         </template>
+        <q-btn
+          flat
+          dense
+          round
+          size="sm"
+          :icon="mail.conversationView ? 'forum' : 'view_agenda'"
+          :color="mail.conversationView ? 'primary' : 'grey-7'"
+          @click="mail.setConversationView(!mail.conversationView)"
+        >
+          <q-tooltip>{{
+            mail.conversationView ? t('mail.conversationOn') : t('mail.conversationOff')
+          }}</q-tooltip>
+        </q-btn>
       </div>
     </div>
     <q-separator />
@@ -74,55 +87,110 @@
         <div class="text-caption">{{ t('mail.emptyHint') }}</div>
       </div>
 
-      <div
-        v-for="m in mail.messages"
-        :key="m.uid"
-        class="mail-list-item row no-wrap items-start"
-        :class="{ 'is-selected': mail.selectedUids.includes(m.uid), 'is-unread': !m.seen }"
-        @click="onClick($event, m.uid)"
-      >
-        <q-checkbox
-          dense
-          size="xs"
-          :model-value="mail.selectedUids.includes(m.uid)"
-          class="q-mr-xs q-mt-xs select-box"
-          @update:model-value="(v) => toggleSelect(m.uid, v)"
-          @click.stop
-        />
-        <q-avatar
-          size="38px"
-          text-color="white"
-          class="q-mr-sm text-caption text-weight-bold"
-          :style="{ background: avatarColor(m.from?.email ?? '') }"
+      <!-- Conversation rows -->
+      <template v-if="mail.conversationView">
+        <div
+          v-for="th in mail.threads"
+          :key="th.key"
+          class="mail-list-item row no-wrap items-start"
+          :class="{ 'is-selected': mail.threadKey === th.key, 'is-unread': th.unread > 0 }"
+          @click="emit('openThread', th)"
         >
-          {{ initials(m.from) }}
-        </q-avatar>
-        <div class="col" style="min-width: 0">
-          <div class="row no-wrap items-center">
-            <div class="mail-list-from col">{{ displayName(m.from) }}</div>
-            <div class="mail-list-date q-ml-sm">{{ listDate(m.date, locale) }}</div>
+          <thread-avatars :participants="th.participants" class="q-mr-sm q-mt-xs" />
+          <div class="col" style="min-width: 0">
+            <div class="row no-wrap items-center">
+              <div class="mail-list-from col">{{ participantNames(th) }}</div>
+              <q-badge
+                v-if="th.messages.length > 1"
+                outline
+                color="grey-7"
+                class="q-mr-xs count-chip"
+                >{{ th.messages.length }}</q-badge
+              >
+              <div class="mail-list-date">{{ listDate(th.latest.date, locale) }}</div>
+            </div>
+            <div class="row no-wrap items-center q-mt-xs">
+              <span v-if="th.unread" class="unread-dot q-mr-xs" />
+              <div class="mail-list-subject col">{{ th.subject || t('mail.noSubject') }}</div>
+              <q-icon
+                v-if="th.has_attachments"
+                name="attach_file"
+                size="15px"
+                class="text-grey q-ml-xs"
+              />
+              <q-icon
+                v-if="th.latest.answered"
+                name="reply"
+                size="15px"
+                class="text-grey q-ml-xs"
+              />
+              <q-icon
+                :name="th.flagged ? 'flag' : 'outlined_flag'"
+                size="16px"
+                class="q-ml-xs flag-icon"
+                :class="th.flagged ? 'text-negative' : 'text-grey-5'"
+                @click.stop="mail.toggleFlag(th.latest.uid)"
+              />
+            </div>
+            <div class="mail-list-preview q-mt-xs" v-if="th.latest.preview">
+              {{ th.latest.preview }}
+            </div>
           </div>
-          <div class="row no-wrap items-center q-mt-xs">
-            <span v-if="!m.seen" class="unread-dot q-mr-xs" />
-            <div class="mail-list-subject col">{{ m.subject || t('mail.noSubject') }}</div>
-            <q-icon
-              v-if="m.has_attachments"
-              name="attach_file"
-              size="15px"
-              class="text-grey q-ml-xs"
-            />
-            <q-icon v-if="m.answered" name="reply" size="15px" class="text-grey q-ml-xs" />
-            <q-icon
-              :name="m.flagged ? 'flag' : 'outlined_flag'"
-              size="16px"
-              class="q-ml-xs flag-icon"
-              :class="m.flagged ? 'text-negative' : 'text-grey-5'"
-              @click.stop="mail.toggleFlag(m.uid)"
-            />
-          </div>
-          <div class="mail-list-preview q-mt-xs" v-if="m.preview">{{ m.preview }}</div>
         </div>
-      </div>
+      </template>
+
+      <!-- Flat rows -->
+      <template v-else>
+        <div
+          v-for="m in mail.messages"
+          :key="m.uid"
+          class="mail-list-item row no-wrap items-start"
+          :class="{ 'is-selected': mail.selectedUids.includes(m.uid), 'is-unread': !m.seen }"
+          @click="onClick($event, m.uid)"
+        >
+          <q-checkbox
+            dense
+            size="xs"
+            :model-value="mail.selectedUids.includes(m.uid)"
+            class="q-mr-xs q-mt-xs select-box"
+            @update:model-value="(v) => toggleSelect(m.uid, v)"
+            @click.stop
+          />
+          <q-avatar
+            size="38px"
+            text-color="white"
+            class="q-mr-sm text-caption text-weight-bold"
+            :style="{ background: avatarColor(m.from?.email ?? '') }"
+          >
+            {{ initials(m.from) }}
+          </q-avatar>
+          <div class="col" style="min-width: 0">
+            <div class="row no-wrap items-center">
+              <div class="mail-list-from col">{{ displayName(m.from) }}</div>
+              <div class="mail-list-date q-ml-sm">{{ listDate(m.date, locale) }}</div>
+            </div>
+            <div class="row no-wrap items-center q-mt-xs">
+              <span v-if="!m.seen" class="unread-dot q-mr-xs" />
+              <div class="mail-list-subject col">{{ m.subject || t('mail.noSubject') }}</div>
+              <q-icon
+                v-if="m.has_attachments"
+                name="attach_file"
+                size="15px"
+                class="text-grey q-ml-xs"
+              />
+              <q-icon v-if="m.answered" name="reply" size="15px" class="text-grey q-ml-xs" />
+              <q-icon
+                :name="m.flagged ? 'flag' : 'outlined_flag'"
+                size="16px"
+                class="q-ml-xs flag-icon"
+                :class="m.flagged ? 'text-negative' : 'text-grey-5'"
+                @click.stop="mail.toggleFlag(m.uid)"
+              />
+            </div>
+            <div class="mail-list-preview q-mt-xs" v-if="m.preview">{{ m.preview }}</div>
+          </div>
+        </div>
+      </template>
 
       <div v-if="mail.hasMore" class="q-pa-sm text-center">
         <q-btn
@@ -146,9 +214,10 @@ import { useQuasar } from 'quasar';
 import { useMailStore } from '@/stores/mail';
 import { avatarColor, displayName, initials, listDate } from '@/utils/format';
 import { errorMessage } from '@/api';
-import type { MessageFilter } from '@/types/api';
+import type { MessageFilter, Thread } from '@/types/api';
+import ThreadAvatars from '@/components/mail/ThreadAvatars.vue';
 
-const emit = defineEmits<{ open: [uid: number] }>();
+const emit = defineEmits<{ open: [uid: number]; openThread: [thread: Thread] }>();
 const { t, locale } = useI18n();
 const $q = useQuasar();
 const mail = useMailStore();
@@ -156,6 +225,13 @@ const mail = useMailStore();
 const search = ref('');
 const filter = ref<MessageFilter>(null);
 const scroller = ref<HTMLElement | null>(null);
+
+function participantNames(th: Thread): string {
+  const names = th.participants.map((p) => (p.name?.trim() || p.email).split(/\s+/)[0] ?? '');
+  return names.length > 3
+    ? `${names.slice(0, 3).join(', ')} +${names.length - 3}`
+    : names.join(', ');
+}
 
 function onSearch(value: string | number | null) {
   void mail.setSearch(String(value ?? ''));
@@ -214,6 +290,10 @@ function onScroll() {
 }
 .flag-icon {
   cursor: pointer;
+}
+.count-chip {
+  font-size: 11px;
+  padding: 1px 6px;
 }
 .empty-state {
   min-height: 300px;

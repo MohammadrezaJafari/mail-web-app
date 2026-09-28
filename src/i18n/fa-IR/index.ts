@@ -64,6 +64,9 @@ const fa: typeof en = {
     showImages: 'محتوای خارجی در محیط ایزوله نمایش داده می‌شود.',
     plainText: 'پیام متنی ساده',
     originalMessage: 'پیام اصلی',
+    conversationOn: 'نمای گفتگو: روشن',
+    conversationOff: 'نمای گفتگو: خاموش',
+    messagesInThread: '{n} پیام',
   },
   compose: {
     title: 'پیام جدید',
@@ -81,6 +84,8 @@ const fa: typeof en = {
     restore: 'بازگرداندن',
     close: 'بستن',
     addRecipient: 'گیرنده را وارد کرده و Enter بزنید',
+    directory: 'دفترچه سازمان',
+    typeAddress: 'نام یا آدرس ایمیل را تایپ کنید',
   },
   settings: {
     title: 'تنظیمات',

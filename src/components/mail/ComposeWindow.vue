@@ -218,7 +218,7 @@ function payload() {
     html: html.value,
     from_alias: fromAlias.value,
     in_reply_to: isReply ? source.message_id : null,
-    references: isReply ? source.references : null,
+    references: isReply ? source.references.join(' ') : null,
     reply_folder: isReply ? source.folder : null,
     reply_uid: isReply ? source.uid : null,
     attachments: files.value,

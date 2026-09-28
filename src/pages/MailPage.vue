@@ -8,6 +8,7 @@
       class="col-auto list-pane"
       :class="{ 'lt-md-hidden': $q.screen.lt.md && (mail.current || mobileView === 'folders') }"
       @open="openMessage"
+      @open-thread="openThread"
     />
     <reading-pane
       class="col reading-pane"
@@ -26,6 +27,7 @@ import { errorMessage } from '@/api';
 import FolderPane from '@/components/mail/FolderPane.vue';
 import MessageList from '@/components/mail/MessageList.vue';
 import ReadingPane from '@/components/mail/ReadingPane.vue';
+import type { Thread } from '@/types/api';
 
 const $q = useQuasar();
 const route = useRoute();
@@ -65,6 +67,14 @@ watch(
     }
   },
 );
+
+async function openThread(thread: Thread) {
+  try {
+    await mail.openThread(thread);
+  } catch (e) {
+    $q.notify({ type: 'negative', message: errorMessage(e) });
+  }
+}
 
 async function openMessage(uid: number) {
   try {

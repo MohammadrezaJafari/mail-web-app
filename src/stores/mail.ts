@@ -1,8 +1,18 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
+import { LocalStorage } from 'quasar';
 import { mailApi } from '@/api';
-import type { Folder, FolderRole, MessageDetail, MessageFilter, MessageSummary } from '@/types/api';
+import { buildThreads } from '@/utils/threads';
+import type {
+  Folder,
+  FolderRole,
+  MessageDetail,
+  MessageFilter,
+  MessageSummary,
+  Thread,
+} from '@/types/api';
 
 const PER_PAGE = 25;
+const CONVERSATION_KEY = 'mail.conversationView';
 
 export const useMailStore = defineStore('mail', {
   state: () => ({
@@ -17,7 +27,11 @@ export const useMailStore = defineStore('mail', {
     filter: null as MessageFilter,
     selectedUids: [] as number[],
     current: null as MessageDetail | null,
+    /** Other messages of the open conversation (oldest→newest), excluding `current`. */
+    thread: [] as MessageDetail[],
+    threadKey: null as string | null,
     currentLoading: false,
+    conversationView: LocalStorage.getItem<boolean>(CONVERSATION_KEY) ?? true,
     error: null as string | null,
   }),
 
@@ -26,9 +40,18 @@ export const useMailStore = defineStore('mail', {
     folder: (s) => s.folders.find((f) => f.path === s.currentFolder),
     hasMore: (s) => s.messages.length < s.total,
     unreadInbox: (s) => s.folders.find((f) => f.role === 'inbox')?.unread ?? 0,
+    threads: (s): Thread[] => (s.conversationView ? buildThreads(s.messages) : []),
   },
 
   actions: {
+    setConversationView(value: boolean) {
+      this.conversationView = value;
+      LocalStorage.set(CONVERSATION_KEY, value);
+      this.current = null;
+      this.thread = [];
+      this.threadKey = null;
+    },
+
     async loadFolders() {
       this.foldersLoading = true;
       try {
@@ -44,6 +67,8 @@ export const useMailStore = defineStore('mail', {
     async openFolder(path: string) {
       if (this.currentFolder !== path) {
         this.current = null;
+        this.thread = [];
+        this.threadKey = null;
         this.selectedUids = [];
       }
       this.currentFolder = path;
@@ -92,6 +117,8 @@ export const useMailStore = defineStore('mail', {
     async open(uid: number) {
       this.currentLoading = true;
       this.selectedUids = [uid];
+      this.thread = [];
+      this.threadKey = null;
       try {
         const wasUnread = !this.messages.find((m) => m.uid === uid)?.seen;
         this.current = await mailApi.message(this.currentFolder, uid, true);
@@ -102,10 +129,35 @@ export const useMailStore = defineStore('mail', {
       }
     },
 
+    /** Open a conversation: the newest message is `current`, older ones are loaded for the stack. */
+    async openThread(thread: Thread, maxOlder = 12) {
+      this.currentLoading = true;
+      this.threadKey = thread.key;
+      this.selectedUids = thread.messages.map((m) => m.uid);
+      this.thread = [];
+      try {
+        const latest = thread.latest;
+        const wasUnread = !latest.seen;
+        this.current = await mailApi.message(this.currentFolder, latest.uid, true);
+        this.patch(latest.uid, { seen: true });
+        if (wasUnread) this.adjustUnread(this.currentFolder, -1);
+
+        const older = thread.messages.slice(1, 1 + maxOlder);
+        const details = await Promise.all(
+          older.map((m) => mailApi.message(this.currentFolder, m.uid, false)),
+        );
+        this.thread = details.reverse(); // oldest first
+      } finally {
+        this.currentLoading = false;
+      }
+    },
+
     patch(uid: number, changes: Partial<MessageSummary>) {
       const item = this.messages.find((m) => m.uid === uid);
       if (item) Object.assign(item, changes);
       if (this.current?.uid === uid) Object.assign(this.current, changes);
+      const inThread = this.thread.find((m) => m.uid === uid);
+      if (inThread) Object.assign(inThread, changes);
     },
 
     adjustUnread(path: string, delta: number) {
@@ -148,7 +200,10 @@ export const useMailStore = defineStore('mail', {
       this.messages = this.messages.filter((m) => !uids.includes(m.uid));
       this.total = Math.max(0, this.total - uids.length);
       this.selectedUids = this.selectedUids.filter((u) => !uids.includes(u));
-      if (this.current && uids.includes(this.current.uid)) this.current = null;
+      this.thread = this.thread.filter((m) => !uids.includes(m.uid));
+      if (this.current && uids.includes(this.current.uid)) {
+        this.current = this.thread.pop() ?? null;
+      }
       this.adjustUnread(this.currentFolder, -unread);
     },
 

@@ -1,6 +1,7 @@
 import { api } from '@/boot/axios';
 import type {
   AliasSummary,
+  ContactSuggestion,
   ComposeDraft,
   Folder,
   Mailbox,
@@ -32,6 +33,15 @@ export const accountApi = {
     api.post<{ data: AliasSummary }>('/me/aliases', { local_part }).then((r) => r.data.data),
   deleteAlias: (id: number) => api.delete(`/me/aliases/${id}`),
   webmail: () => api.get<{ url: string }>('/me/webmail').then((r) => r.data.url),
+};
+
+export const contactsApi = {
+  search: (q: string, limit = 8) =>
+    api
+      .get<{ data: ContactSuggestion[] }>('/contacts', { params: { q: q || undefined, limit } })
+      .then((r) => r.data.data),
+  sync: (force = false) =>
+    api.post<{ synced: boolean }>('/contacts/sync', { force }).then((r) => r.data),
 };
 
 export const mailApi = {

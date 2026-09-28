@@ -63,6 +63,9 @@ export default {
     showImages: 'External content is shown in a sandbox.',
     plainText: 'Plain text message',
     originalMessage: 'Original message',
+    conversationOn: 'Conversation view: on',
+    conversationOff: 'Conversation view: off',
+    messagesInThread: '{n} messages',
   },
   compose: {
     title: 'New message',
@@ -80,6 +83,8 @@ export default {
     restore: 'Restore',
     close: 'Close',
     addRecipient: 'Add recipient and press Enter',
+    directory: 'Organization directory',
+    typeAddress: 'Type a name or an e-mail address',
   },
   settings: {
     title: 'Settings',

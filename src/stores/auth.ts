@@ -1,5 +1,5 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { accountApi, authApi } from '@/api';
+import { accountApi, authApi, contactsApi } from '@/api';
 import { getToken, setToken } from '@/boot/axios';
 import type { Mailbox, SharedMailbox, User } from '@/types/api';
 
@@ -28,6 +28,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = user;
       setToken(token);
       await this.loadMe();
+      contactsApi.sync().catch(() => undefined);
     },
 
     async loadMe() {

@@ -81,6 +81,8 @@ export interface MessageSummary {
   has_attachments: boolean;
   size: number;
   message_id: string;
+  in_reply_to: string;
+  references: string[];
 }
 
 export interface Attachment {
@@ -98,8 +100,6 @@ export interface MessageDetail extends MessageSummary {
   reply_to: Address[];
   html: string | null;
   text: string | null;
-  in_reply_to: string;
-  references: string;
   attachments: Attachment[];
 }
 
@@ -135,4 +135,21 @@ export interface ComposeDraft {
   reply_folder?: string | null;
   reply_uid?: number | null;
   attachments: File[];
+}
+
+export interface Thread {
+  key: string;
+  subject: string;
+  messages: MessageSummary[]; // newest first
+  latest: MessageSummary;
+  participants: Address[];
+  unread: number;
+  flagged: boolean;
+  has_attachments: boolean;
+}
+
+export interface ContactSuggestion {
+  email: string;
+  name: string | null;
+  source: 'personal' | 'directory';
 }
