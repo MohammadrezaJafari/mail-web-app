@@ -19,12 +19,32 @@
     <q-card-section v-else-if="denied" class="text-caption text-negative">{{
       t('settings.notificationsDenied')
     }}</q-card-section>
+    <q-separator />
+    <q-card-section class="row items-center no-wrap">
+      <div class="col">
+        <div class="text-weight-medium">{{ t('settings.undoSend') }}</div>
+        <div class="text-caption text-grey">{{ t('settings.undoSendHint') }}</div>
+      </div>
+      <q-select
+        v-model="undoSeconds"
+        dense
+        outlined
+        emit-value
+        map-options
+        style="min-width: 120px"
+        :options="
+          [0, 5, 8, 15, 30].map((n) => ({ label: n ? `${n}s` : t('settings.off'), value: n }))
+        "
+        @update:model-value="(v) => LocalStorage.set('mail.undoSendSeconds', v)"
+      />
+    </q-card-section>
   </q-card>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { LocalStorage } from 'quasar';
 import {
   notificationsEnabled,
   notificationsSupported,
@@ -36,6 +56,7 @@ const supported = notificationsSupported();
 const enabled = ref(notificationsEnabled());
 const permission = ref(supported ? Notification.permission : 'default');
 const denied = computed(() => permission.value === 'denied');
+const undoSeconds = ref(LocalStorage.getItem<number>('mail.undoSendSeconds') ?? 8);
 
 async function toggle(value: boolean) {
   enabled.value = await setNotificationsEnabled(value);

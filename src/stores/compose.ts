@@ -1,5 +1,5 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import type { MessageDetail } from '@/types/api';
+import type { ComposeDraft, MessageDetail } from '@/types/api';
 
 export type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -7,6 +7,8 @@ export interface ComposeRequest {
   mode: ComposeMode;
   source?: MessageDetail | null;
   to?: string[];
+  /** Restore a previously composed draft (undo send). */
+  restore?: ComposeDraft | null;
 }
 
 export const useComposeStore = defineStore('compose', {

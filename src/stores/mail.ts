@@ -1,6 +1,6 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { LocalStorage } from 'quasar';
-import { mailApi } from '@/api';
+import { accountApi, mailApi } from '@/api';
 import { buildThreads } from '@/utils/threads';
 import type {
   Folder,
@@ -252,6 +252,39 @@ export const useMailStore = defineStore('mail', {
       return this.selectedUids.includes(uid) && this.selectedUids.length > 1
         ? [...this.selectedUids]
         : [uid];
+    },
+
+    async snooze(uids: number[], until: Date) {
+      const messages = this.messages
+        .filter((m) => uids.includes(m.uid))
+        .map((m) => ({ uid: m.uid, message_id: m.message_id, subject: m.subject }));
+      await mailApi.snooze(
+        this.currentFolder,
+        messages.length ? messages : uids.map((uid) => ({ uid })),
+        until.toISOString(),
+      );
+      this.dropLocal(uids);
+      await this.loadFolders();
+    },
+
+    /** Create a rule that sends everything from this address to Junk. */
+    async blockSender(email: string) {
+      const junk = this.folderByRole('junk')?.path ?? 'Junk';
+      const rules = await accountApi.rules();
+      const address = email.trim().toLowerCase();
+      if (rules.some((r) => r.name === `Blocked: ${address}`)) return;
+      rules.push({
+        name: `Blocked: ${address}`,
+        enabled: true,
+        match: 'all',
+        conditions: [{ field: 'from', operator: 'is', value: address }],
+        actions: [
+          { type: 'move', value: junk },
+          { type: 'mark_read', value: '' },
+          { type: 'stop', value: '' },
+        ],
+      });
+      await accountApi.saveRules(rules);
     },
 
     async archive(uids: number[]): Promise<boolean> {

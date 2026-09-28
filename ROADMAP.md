@@ -17,7 +17,6 @@ PHP-FPM request workers; needs its own process manager and monitoring.
 
 ## Next candidates
 
-- Blocked / safe senders (could be built on rules)
-- Snooze, schedule send, undo send
+- Safe senders list, unblock UI (block sender exists via rules)
 - Inline images and tables in compose, multiple signatures
 - Calendar & contacts (CalDAV/CardDAV via SOGo)

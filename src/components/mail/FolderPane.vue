@@ -129,9 +129,19 @@
     </div>
 
     <q-separator />
+    <q-item clickable dense class="q-mx-sm q-my-xs folder-item" @click="deferredOpen = true">
+      <q-item-section avatar style="min-width: 30px"
+        ><q-icon name="schedule" size="20px"
+      /></q-item-section>
+      <q-item-section
+        ><q-item-label class="folder-label">{{ t('deferred.title') }}</q-item-label></q-item-section
+      >
+    </q-item>
+    <q-separator />
     <div class="q-pa-md">
       <storage-meter compact />
     </div>
+    <deferred-dialog v-model="deferredOpen" />
   </div>
 </template>
 
@@ -145,6 +155,7 @@ import { errorMessage, mailApi } from '@/api';
 import type { Folder, FolderNode, FolderRole } from '@/types/api';
 import { flattenTree } from '@/utils/folderTree';
 import StorageMeter from '@/components/settings/StorageMeter.vue';
+import DeferredDialog from '@/components/mail/DeferredDialog.vue';
 
 const COLLAPSED_KEY = 'mail.collapsedFolders';
 
@@ -153,6 +164,7 @@ const $q = useQuasar();
 const mail = useMailStore();
 const compose = useComposeStore();
 const dropTarget = ref<string | null>(null);
+const deferredOpen = ref(false);
 const collapsed = ref(new Set<string>(LocalStorage.getItem<string[]>(COLLAPSED_KEY) ?? []));
 
 const visibleNodes = computed(() => flattenTree(mail.folderTree, collapsed.value));
@@ -179,6 +191,8 @@ function iconFor(role: FolderRole): string {
       return 'delete';
     case 'archive':
       return 'archive';
+    case 'snoozed':
+      return 'snooze';
     default:
       return 'folder';
   }

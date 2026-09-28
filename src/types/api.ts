@@ -51,7 +51,8 @@ export interface MeResponse {
   webmail_url: string;
 }
 
-export type FolderRole = 'inbox' | 'drafts' | 'sent' | 'junk' | 'trash' | 'archive' | null;
+export type FolderRole =
+  'inbox' | 'drafts' | 'sent' | 'junk' | 'trash' | 'archive' | 'snoozed' | null;
 
 export interface Folder {
   path: string;
@@ -192,4 +193,21 @@ export interface MailRule {
   match: 'all' | 'any';
   conditions: RuleCondition[];
   actions: RuleAction[];
+}
+
+export interface ScheduledMessage {
+  id: number;
+  to: string[];
+  subject: string;
+  send_at: string;
+  status: 'pending' | 'sent' | 'failed';
+  error: string | null;
+  attachments: number;
+}
+
+export interface SnoozedItem {
+  id: number;
+  subject: string | null;
+  wake_at: string;
+  origin_folder: string;
 }

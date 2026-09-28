@@ -65,6 +65,22 @@
           @click="mail.markSeen([mail.current.uid], false)"
           ><q-tooltip>{{ t('mail.markUnread') }}</q-tooltip></q-btn
         >
+        <q-btn flat dense round icon="snooze">
+          <q-tooltip>{{ t('snooze.title') }}</q-tooltip>
+          <time-picker-menu :title="t('snooze.until')" @pick="snooze" />
+        </q-btn>
+        <q-btn flat dense round icon="more_vert">
+          <q-menu class="rounded-menu">
+            <q-list dense style="min-width: 220px" class="q-py-xs">
+              <q-item clickable v-close-popup @click="blockSender">
+                <q-item-section avatar><q-icon name="block" size="18px" /></q-item-section>
+                <q-item-section>{{
+                  t('mail.blockSender', { email: mail.current.from?.email })
+                }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </q-toolbar>
       <q-separator />
 
@@ -107,10 +123,12 @@ import { useMailStore } from '@/stores/mail';
 import { useComposeStore } from '@/stores/compose';
 import { errorMessage } from '@/api';
 import MessageView from '@/components/mail/MessageView.vue';
+import TimePickerMenu from '@/components/mail/TimePickerMenu.vue';
+import { fullDate } from '@/utils/format';
 import type { MessageDetail } from '@/types/api';
 
 const emit = defineEmits<{ back: [] }>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const $q = useQuasar();
 const mail = useMailStore();
 const compose = useComposeStore();
@@ -120,6 +138,39 @@ const conversationCount = computed(() => mail.thread.length + 1);
 
 function replyTo(message: MessageDetail) {
   compose.start({ mode: 'reply', source: message });
+}
+
+function threadUids(): number[] {
+  if (!mail.current) return [];
+  return mail.threadKey ? [mail.current.uid, ...mail.thread.map((m) => m.uid)] : [mail.current.uid];
+}
+
+async function snooze(until: Date) {
+  try {
+    await mail.snooze(threadUids(), until);
+    $q.notify({
+      type: 'positive',
+      message: t('snooze.done', { time: fullDate(until.toISOString(), locale.value) }),
+    });
+  } catch (e) {
+    $q.notify({ type: 'negative', message: errorMessage(e) });
+  }
+}
+
+function blockSender() {
+  const email = mail.current?.from?.email;
+  if (!email) return;
+  $q.dialog({
+    title: t('mail.blockSender', { email }),
+    message: t('mail.blockSenderHint'),
+    cancel: true,
+    ok: t('common.confirm'),
+  }).onOk(() => {
+    mail.blockSender(email).then(
+      () => $q.notify({ type: 'positive', message: t('mail.blocked', { email }) }),
+      (e) => $q.notify({ type: 'negative', message: errorMessage(e) }),
+    );
+  });
 }
 
 function remove() {

@@ -85,15 +85,20 @@
       <q-separator />
 
       <q-card-actions class="q-px-md">
-        <q-btn
-          color="primary"
-          unelevated
-          no-caps
-          icon="send"
-          :label="t('compose.send')"
-          :loading="sending"
-          @click="send"
-        />
+        <q-btn-group unelevated class="send-group">
+          <q-btn
+            color="primary"
+            unelevated
+            no-caps
+            icon="send"
+            :label="t('compose.send')"
+            :loading="sending"
+            @click="send"
+          />
+          <q-btn color="primary" unelevated dense icon="arrow_drop_down" class="q-px-xs">
+            <time-picker-menu :title="t('compose.scheduleSend')" @pick="schedule" />
+          </q-btn>
+        </q-btn-group>
         <q-btn
           flat
           no-caps
@@ -127,6 +132,8 @@ import { useMailStore } from '@/stores/mail';
 import { errorMessage, mailApi } from '@/api';
 import { addressLine, fileSize, fullDate, textToHtml } from '@/utils/format';
 import RecipientInput from '@/components/mail/RecipientInput.vue';
+import TimePickerMenu from '@/components/mail/TimePickerMenu.vue';
+import { LocalStorage } from 'quasar';
 import type { MessageDetail } from '@/types/api';
 
 const { t, locale } = useI18n();
@@ -174,7 +181,18 @@ function quoted(msg: MessageDetail): string {
   return `<br><br>${header}<blockquote style="border-left:3px solid #ccc;padding-left:10px;margin-left:0">${body}</blockquote>`;
 }
 
-if (request) {
+if (request?.restore) {
+  const r = request.restore;
+  to.value = [...r.to];
+  cc.value = [...r.cc];
+  bcc.value = [...r.bcc];
+  showCc.value = cc.value.length > 0;
+  showBcc.value = bcc.value.length > 0;
+  subject.value = r.subject;
+  html.value = r.html;
+  files.value = [...r.attachments];
+  fromAlias.value = r.from_alias ?? null;
+} else if (request) {
   if (request.to) to.value = [...request.to];
 
   if (source && request.mode !== 'new') {
@@ -225,18 +243,89 @@ function payload() {
   };
 }
 
-async function send() {
+const UNDO_KEY = 'mail.undoSendSeconds';
+
+async function deliver(draft: ReturnType<typeof payload>) {
+  try {
+    await mailApi.send(draft);
+    $q.notify({ type: 'positive', message: t('compose.sent') });
+    if (draft.reply_uid) mail.patch(draft.reply_uid, { answered: true });
+    void mail.loadFolders();
+  } catch (e) {
+    $q.notify({
+      type: 'negative',
+      message: errorMessage(e, t('compose.sendFailed')),
+      timeout: 0,
+      actions: [
+        {
+          label: t('compose.reopen'),
+          color: 'white',
+          handler: () => compose.start({ mode: 'new', restore: draft }),
+        },
+      ],
+    });
+  }
+}
+
+function send() {
+  if (!to.value.length) {
+    $q.notify({ type: 'warning', message: t('compose.recipientRequired') });
+    return;
+  }
+  const draft = payload();
+  const undoSeconds = LocalStorage.getItem<number>(UNDO_KEY) ?? 8;
+  const originalRequest = request;
+  compose.close();
+
+  if (undoSeconds <= 0) {
+    void deliver(draft);
+    return;
+  }
+
+  let undone = false;
+  const timer = setTimeout(() => {
+    dismiss();
+    if (!undone) void deliver(draft);
+  }, undoSeconds * 1000);
+
+  const dismiss = $q.notify({
+    message: t('compose.sending'),
+    icon: 'send',
+    timeout: undoSeconds * 1000 + 500,
+    progress: true,
+    actions: [
+      {
+        label: t('compose.undo'),
+        color: 'yellow',
+        handler: () => {
+          undone = true;
+          clearTimeout(timer);
+          compose.start({
+            mode: originalRequest?.mode ?? 'new',
+            source: originalRequest?.source ?? null,
+            restore: draft,
+          });
+        },
+      },
+    ],
+  });
+}
+
+async function schedule(date: Date) {
   if (!to.value.length) {
     $q.notify({ type: 'warning', message: t('compose.recipientRequired') });
     return;
   }
   sending.value = true;
   try {
-    await mailApi.send(payload());
-    $q.notify({ type: 'positive', message: t('compose.sent') });
-    if (payload().reply_uid) mail.patch(payload().reply_uid as number, { answered: true });
+    await mailApi.schedule(payload(), date.toISOString());
+    $q.notify({
+      type: 'positive',
+      message: t('compose.scheduled', {
+        time: date.toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' }),
+      }),
+    });
     compose.close();
-    void mail.loadFolders();
   } catch (e) {
     $q.notify({ type: 'negative', message: errorMessage(e, t('compose.sendFailed')) });
   } finally {
@@ -264,6 +353,10 @@ function discard() {
 </script>
 
 <style scoped>
+.send-group {
+  border-radius: 10px;
+  overflow: hidden;
+}
 .compose-bar {
   background: linear-gradient(90deg, #0f6cbd, #2b88d8);
   height: 40px;

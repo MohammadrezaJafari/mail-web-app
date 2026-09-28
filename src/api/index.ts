@@ -7,7 +7,9 @@ import type {
   Mailbox,
   MailboxSettingsPayload,
   MailRule,
+  ScheduledMessage,
   SearchCriteria,
+  SnoozedItem,
   MeResponse,
   MessageDetail,
   MessageFilter,
@@ -107,6 +109,20 @@ export const mailApi = {
   delete: (folder: string, uids: number[]) => api.post('/mail/messages/delete', { folder, uids }),
   send: (draft: ComposeDraft) => api.post('/mail/send', toFormData(draft)),
   saveDraft: (draft: ComposeDraft) => api.post('/mail/drafts', toFormData(draft)),
+  schedule: (draft: ComposeDraft, sendAt: string) => {
+    const fd = toFormData(draft);
+    fd.append('send_at', sendAt);
+    return api.post<{ data: ScheduledMessage }>('/mail/scheduled', fd).then((r) => r.data.data);
+  },
+  scheduled: () =>
+    api.get<{ data: ScheduledMessage[] }>('/mail/scheduled').then((r) => r.data.data),
+  cancelScheduled: (id: number) => api.delete(`/mail/scheduled/${id}`),
+  snooze: (
+    folder: string,
+    messages: Array<{ uid: number; message_id?: string; subject?: string }>,
+    until: string,
+  ) => api.post('/mail/snooze', { folder, messages, until }),
+  snoozed: () => api.get<{ data: SnoozedItem[] }>('/mail/snoozed').then((r) => r.data.data),
 };
 
 function toFormData(draft: ComposeDraft): FormData {
