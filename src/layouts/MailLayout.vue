@@ -115,6 +115,7 @@ import { useComposeStore } from '@/stores/compose';
 import LanguageToggle from '@/components/LanguageToggle.vue';
 import { APP_NAME } from '@/utils/format';
 import ComposeWindow from '@/components/mail/ComposeWindow.vue';
+import { useMailPolling } from '@/composables/useMailPolling';
 
 const { t, locale } = useI18n();
 const $q = useQuasar();
@@ -125,6 +126,8 @@ const mail = useMailStore();
 const compose = useComposeStore();
 
 const appName = computed(() => (locale.value === 'fa-IR' ? t('app.name') : APP_NAME));
+
+useMailPolling();
 const drawer = ref(false);
 const isMail = computed(() => String(route.name ?? '').startsWith('mail'));
 

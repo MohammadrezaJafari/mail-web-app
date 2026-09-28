@@ -124,6 +124,13 @@ const fa: typeof en = {
     sharedMailboxes: 'صندوق‌های مشترک',
     sharedHint: 'صندوق‌های مشترکی که به آن‌ها دسترسی دارید در وب‌میل باز می‌شوند.',
     suspended: 'این صندوق تعلیق شده است. با مدیر سیستم تماس بگیرید.',
+    notifications: 'اعلان دسکتاپ',
+    notificationsHint: 'وقتی این تب در پس‌زمینه است، از رسیدن ایمیل جدید باخبر شوید.',
+    notificationsUnsupported: 'این مرورگر از اعلان پشتیبانی نمی‌کند.',
+    notificationsDenied: 'اعلان‌ها برای این سایت در تنظیمات مرورگر مسدود شده‌اند.',
+  },
+  notify: {
+    newMessages: '{n} پیام جدید',
   },
   common: {
     cancel: 'انصراف',

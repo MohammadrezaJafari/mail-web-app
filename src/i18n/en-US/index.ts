@@ -123,6 +123,13 @@ export default {
     sharedMailboxes: 'Shared mailboxes',
     sharedHint: 'Shared mailboxes you have access to open in webmail.',
     suspended: 'This mailbox is suspended. Contact your administrator.',
+    notifications: 'Desktop notifications',
+    notificationsHint: 'Get notified when new mail arrives while this tab is in the background.',
+    notificationsUnsupported: 'This browser does not support notifications.',
+    notificationsDenied: 'Notifications are blocked for this site in your browser settings.',
+  },
+  notify: {
+    newMessages: '{n} new messages',
   },
   common: {
     cancel: 'Cancel',

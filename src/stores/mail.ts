@@ -14,6 +14,10 @@ import type {
 const PER_PAGE = 25;
 const CONVERSATION_KEY = 'mail.conversationView';
 
+function emptyUidMap(): Record<string, number> {
+  return {};
+}
+
 export const useMailStore = defineStore('mail', {
   state: () => ({
     folders: [] as Folder[],
@@ -32,6 +36,11 @@ export const useMailStore = defineStore('mail', {
     threadKey: null as string | null,
     currentLoading: false,
     conversationView: LocalStorage.getItem<boolean>(CONVERSATION_KEY) ?? true,
+    /** Last seen UIDNEXT per folder, used to detect new mail cheaply. */
+    uidNext: emptyUidMap(),
+    /** Messages that arrived since the last poll (consumed by the notifier). */
+    arrived: [] as MessageSummary[],
+    polling: false,
     error: null as string | null,
   }),
 
@@ -56,6 +65,7 @@ export const useMailStore = defineStore('mail', {
       this.foldersLoading = true;
       try {
         this.folders = await mailApi.folders();
+        for (const f of this.folders) this.uidNext[f.path] = f.uidnext;
         if (!this.currentFolder) {
           this.currentFolder = this.folderByRole('inbox')?.path ?? this.folders[0]?.path ?? 'INBOX';
         }
@@ -209,6 +219,38 @@ export const useMailStore = defineStore('mail', {
 
     async refresh() {
       await Promise.all([this.loadFolders(), this.loadMessages(true)]);
+    },
+
+    /**
+     * Lightweight poll: one STATUS per folder. When the open folder gained
+     * messages, fetch just those (UID range) and prepend them to the list.
+     * Returns the newly arrived messages of the current folder.
+     */
+    async poll(): Promise<MessageSummary[]> {
+      if (this.polling || !this.currentFolder) return [];
+      this.polling = true;
+      try {
+        const folders = await mailApi.folders();
+        const previous = { ...this.uidNext };
+        this.folders = folders;
+        for (const f of folders) this.uidNext[f.path] = f.uidnext;
+
+        const current = folders.find((f) => f.path === this.currentFolder);
+        const since = previous[this.currentFolder];
+        if (!current || !since || current.uidnext <= since) return [];
+
+        const fresh = await mailApi.messagesSince(this.currentFolder, since);
+        const known = new Set(this.messages.map((m) => m.uid));
+        const added = fresh.data.filter((m) => !known.has(m.uid));
+        if (added.length && !this.search && !this.filter) {
+          this.messages = [...added, ...this.messages];
+          this.total += added.length;
+        }
+        this.arrived = added;
+        return added;
+      } finally {
+        this.polling = false;
+      }
     },
   },
 });

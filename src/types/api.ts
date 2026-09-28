@@ -59,6 +59,8 @@ export interface Folder {
   role: FolderRole;
   unread: number;
   total: number;
+  uidnext: number;
+  uidvalidity: number;
   delimiter: string;
 }
 

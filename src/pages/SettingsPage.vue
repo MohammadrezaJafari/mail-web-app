@@ -26,6 +26,7 @@
         <forwarding-card />
         <auto-reply-card />
         <signature-card />
+        <notifications-card />
       </div>
     </div>
   </q-page>
@@ -41,6 +42,7 @@ import PasswordCard from '@/components/settings/PasswordCard.vue';
 import ForwardingCard from '@/components/settings/ForwardingCard.vue';
 import AutoReplyCard from '@/components/settings/AutoReplyCard.vue';
 import SignatureCard from '@/components/settings/SignatureCard.vue';
+import NotificationsCard from '@/components/settings/NotificationsCard.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();

@@ -60,6 +60,10 @@ export const mailApi = {
         },
       })
       .then((r) => r.data),
+  messagesSince: (folder: string, sinceUid: number) =>
+    api
+      .get<MessagePage>('/mail/messages', { params: { folder, since_uid: sinceUid, per_page: 50 } })
+      .then((r) => r.data),
   message: (folder: string, uid: number, markSeen = true) =>
     api
       .get<{ data: MessageDetail }>(`/mail/messages/${uid}`, {
